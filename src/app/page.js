@@ -3,43 +3,10 @@ import Link from "next/link";
 export default function Home() {
   return (
     <main className="min-h-screen bg-[#FFF7EF] text-slate-900">
-      {/* NAVBAR */}
-      <header className="flex items-center justify-between px-12 py-6 bg-white shadow-sm">
-        <div className="flex items-center gap-2">
-          <span className="text-xl font-extrabold tracking-tight text-orange-600">
-            DABS
-          </span>
-          <span className="text-xs text-slate-500">
-            Empowering Artisan Women
-          </span>
-        </div>
-
-        <nav className="flex items-center gap-8 text-sm font-medium text-slate-700">
-          <Link href="/marketplace" className="hover:text-orange-600">
-            Marketplace
-          </Link>
-          <a href="#workshops" className="hover:text-orange-600">
-            Workshops
-          </a>
-          <a href="#mentoring" className="hover:text-orange-600">
-            Mentoring
-          </a>
-          <a href="#about" className="hover:text-orange-600">
-            About
-          </a>
-        </nav>
-
-        <div className="flex items-center gap-4 text-sm">
-          <button className="hover:text-orange-600">My Orders</button>
-          <button className="flex items-center gap-2 rounded-full border border-slate-300 px-4 py-1.5 hover:border-orange-500 hover:text-orange-600">
-            <span className="inline-block h-6 w-6 rounded-full bg-slate-200" />
-            <span>Profile</span>
-          </button>
-        </div>
-      </header>
 
       {/* HERO + IMAGE */}
       <section className="px-12 py-12 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+
         {/* Left: Text */}
         <div>
           <p className="text-xs font-semibold tracking-[0.2em] text-orange-500 mb-4">
@@ -88,10 +55,11 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Right: Image placeholder */}
+        {/* Right: Image */}
         <div className="rounded-2xl overflow-hidden shadow-lg bg-slate-200 h-[260px] md:h-[320px]">
-          {/* Later: replace with real image */}
+          {/* Placeholder image */}
         </div>
+
       </section>
     </main>
   );
