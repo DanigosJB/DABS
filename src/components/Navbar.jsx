@@ -39,60 +39,67 @@ export default function Navbar() {
     await signOut(auth);
   };
 
-  // Sent to correct profile folder based on role
   const getProfileRoute = () => {
     if (role === "buyer") return "/profile/buyer";
     if (role === "artisan") return "/profile/artisan";
     if (role === "admin") return "/profile/admin";
-    return "/profile/buyer"; // fallback
+    return "/profile/buyer";
   };
 
   return (
     <header className="w-full bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-8 py-4">
-        
         {/* LOGO */}
         <Link href="/" className="flex flex-col leading-tight">
           <span className="text-orange-600 font-bold text-lg">DABS</span>
-          <span className="text-slate-500 text-xs">Empowering Artisan Women</span>
+          <span className="text-slate-500 text-xs">
+            Empowering Artisan Women
+          </span>
         </Link>
 
         {/* MAIN NAV */}
         <nav className="flex gap-8 text-sm text-slate-700">
-          <Link href="/marketplace" className="hover:text-orange-600">Marketplace</Link>
-          <Link href="/workshops" className="hover:text-orange-600">Workshops</Link>
-          <Link href="/mentoring" className="hover:text-orange-600">Mentoring</Link>
-          <Link href="/about" className="hover:text-orange-600">About</Link>
+          <Link href="/marketplace" className="hover:text-orange-600">
+            Marketplace
+          </Link>
+          <Link href="/workshops" className="hover:text-orange-600">
+            Workshops
+          </Link>
+          <Link href="/mentoring" className="hover:text-orange-600">
+            Mentoring
+          </Link>
+          <Link href="/about" className="hover:text-orange-600">
+            About
+          </Link>
 
-          {/* Only Admins see the Admin dashboard */}
+          {/* ADMIN-ONLY DASHBOARD TAB */}
           {role === "admin" && (
-            <Link href="/admin" className="hover:text-orange-600">Admin</Link>
+            <Link
+              href="/admin"
+              className="hover:text-orange-600 font-semibold"
+            >
+              Dashboard
+            </Link>
           )}
         </nav>
 
         {/* RIGHT SIDE */}
         <div className="flex items-center gap-6 text-sm text-slate-700">
-
-          {/* ONLY BUYERS SEE MY ORDERS */}
+          {/* BUYER-ONLY MY ORDERS */}
           {user && role === "buyer" && (
             <Link href="/orders" className="hover:text-orange-600">
               My Orders
             </Link>
           )}
 
-          {/* LOGGED IN */}
           {user ? (
             <div className="flex items-center gap-4">
-
               {/* PROFILE BUTTON */}
               <Link
                 href={getProfileRoute()}
                 className="flex items-center gap-2 rounded-full border border-slate-300 px-4 py-1.5 hover:border-orange-500 hover:text-orange-600"
               >
-                {/* Avatar Circle */}
                 <span className="inline-block h-6 w-6 rounded-full bg-slate-200" />
-
-                {/* Email + Role */}
                 <div className="flex flex-col leading-tight">
                   <span className="text-sm">{user.email}</span>
                   {!loadingRole && role && (
@@ -112,13 +119,14 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            /* LOGGED OUT */
-            <Link href="/login" className="hover:text-orange-600">
-              Login
-            </Link>
+            // LOGGED OUT: only Login (Register is handled in /login page)
+            <div className="flex items-center gap-4">
+              <Link href="/login" className="hover:text-orange-600">
+                Login
+              </Link>
+            </div>
           )}
         </div>
-
       </div>
     </header>
   );
