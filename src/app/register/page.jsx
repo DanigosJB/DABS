@@ -1,151 +1,204 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+} from "firebase/auth";
+import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
+  // Decide role based on query (?role=buyer or ?role=artisan)
+  const urlRole = (searchParams.get("role") || "buyer").toLowerCase();
+  const fixedRole = urlRole === "artisan" ? "artisan" : "buyer";
+
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [role, setRole] = useState("artisan"); // default: artisan
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+
+  // If already logged in, send them away
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      if (!u) return;
+
+      try {
+        const snap = await getDoc(doc(db, "users", u.uid));
+        const existingRole = snap.exists() ? snap.data().role : null;
+
+        if (existingRole === "admin") {
+          router.push("/admin");
+        } else if (existingRole === "artisan") {
+          router.push("/profile/artisan");
+        } else {
+          router.push("/profile/buyer");
+        }
+      } catch (err) {
+        console.error("Error checking role:", err);
+      }
+    });
+
+    return () => unsub();
+  }, [router]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!email || !password || !confirm) {
-      setError("Please fill in all fields.");
-      return;
-    }
-
-    if (password !== confirm) {
+    if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
+    setSubmitting(true);
 
     try {
-      setLoading(true);
+      const cred = await createUserWithEmailAndPassword(
+        auth,
+        email.trim(),
+        password
+      );
 
-      // 1) Create Auth user
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      const u = cred.user;
 
-      // 2) Create Firestore user profile with role
-      await setDoc(doc(db, "users", cred.user.uid), {
-        email,
-        role, // "buyer" | "artisan" | "admin" (for admin you’ll set manually)
+      await setDoc(doc(db, "users", u.uid), {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: u.email,
+        role: fixedRole, // fixed as buyer or artisan
         createdAt: serverTimestamp(),
       });
 
-      // 3) Go to marketplace (or wherever you want)
-      router.push("/marketplace");
+      if (fixedRole === "artisan") {
+        router.push("/profile/artisan");
+      } else {
+        router.push("/profile/buyer");
+      }
     } catch (err) {
       console.error("Register error:", err);
-      setError(err.message || "Failed to register. Please try again.");
-      setLoading(false);
+      setError("Unable to create account. Please check your details.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  return (
-    <main className="min-h-screen bg-[#FFF7EF] px-12 py-10">
-      <h1 className="text-3xl font-bold mb-4 text-slate-900">
-        Create Artisan Account
-      </h1>
-      <p className="text-sm text-slate-600 mb-6">
-        Register to list your crafts and manage your DABS marketplace profile.
-      </p>
+  const title =
+    fixedRole === "artisan" ? "Create Artisan Account" : "Create Buyer Account";
+  const description =
+    fixedRole === "artisan"
+      ? "Register to list your crafts and manage your DABS marketplace profile."
+      : "Register to shop from women artisans and manage your buyer profile.";
 
-      <form
-        onSubmit={handleRegister}
-        className="max-w-md bg-white rounded-2xl shadow-md p-6 space-y-4"
-      >
+  return (
+    <div className="min-h-screen bg-[#fdf4e6] flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-md p-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          {title}
+        </h1>
+        <p className="text-sm text-gray-600 mb-4">{description}</p>
+
+        {/* Small badge showing what type of account */}
+        <div className="mb-4 inline-flex items-center px-3 py-1 rounded-full bg-orange-50 text-orange-700 text-xs font-medium">
+          Registering as:{" "}
+          <span className="ml-1 capitalize">{fixedRole}</span>
+        </div>
+
         {error && (
-          <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
+          <div className="mb-4 px-3 py-2 rounded-lg bg-red-100 text-red-800 text-xs">
             {error}
-          </p>
+          </div>
         )}
 
-        {/* EMAIL */}
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-700">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            placeholder="artisan@example.com"
-          />
-        </div>
+        <form onSubmit={handleRegister} className="space-y-4 text-sm">
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block mb-1 text-gray-700">
+                First Name
+              </label>
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block mb-1 text-gray-700">
+                Last Name
+              </label>
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-300"
+              />
+            </div>
+          </div>
 
-        {/* PASSWORD */}
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-700">Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            placeholder="At least 6 characters"
-          />
-        </div>
+          <div>
+            <label className="block mb-1 text-gray-700">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-300"
+            />
+          </div>
 
-        {/* CONFIRM PASSWORD */}
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-700">
-            Confirm Password
-          </label>
-          <input
-            type="password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
-          />
-        </div>
+          <div>
+            <label className="block mb-1 text-gray-700">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-300"
+            />
+          </div>
 
-        {/* ROLE SELECTOR */}
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-700">
-            Account Type
-          </label>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          <div>
+            <label className="block mb-1 text-gray-700">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-300"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full mt-2 px-4 py-2 rounded-lg bg-orange-600 text-white font-semibold hover:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <option value="artisan">Artisan (sell crafts)</option>
-            <option value="buyer">Buyer (shop only)</option>
-          </select>
-        </div>
+            {submitting ? "Creating account..." : "Register"}
+          </button>
+        </form>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded-full bg-orange-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 disabled:opacity-60"
-        >
-          {loading ? "Creating account..." : "Register"}
-        </button>
-      </form>
-
-      <p className="mt-4 text-sm text-slate-600">
-        Already have an account?{" "}
-        <button
-          onClick={() => router.push("/login")}
-          className="text-orange-600 font-semibold hover:underline"
-        >
-          Log in
-        </button>
-      </p>
-    </main>
+        <p className="mt-4 text-xs text-gray-500">
+          Already have an account?{" "}
+          <span
+            className="text-orange-600 font-semibold cursor-pointer"
+            onClick={() => router.push("/login")}
+          >
+            Log in
+          </span>
+        </p>
+      </div>
+    </div>
   );
 }
