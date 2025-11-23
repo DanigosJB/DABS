@@ -1,26 +1,40 @@
 @import "tailwindcss";
 
+/* ------------------------------------------
+   TEAL + CITRUS THEME (your chosen palette)
+------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Main Background + Text */
+  --background: #BAD9CE;      /* light aqua */
+  --foreground: #0E6973;      /* deep teal */
+
+  /* Palette */
+  --color-teal-dark: #0E6973;
+  --color-teal: #118C8C;
+  --color-aqua: #BAD9CE;
+  --color-yellow: #F2BB16;
+  --color-ochre: #BF820F;
+
+  /* UI Colors */
+  --bg-main: var(--color-aqua);
+  --bg-card: #ffffff;          /* white card on aqua background */
+  --bg-soft: rgba(255, 255, 255, 0.6);
+
+  --text-main: var(--color-teal-dark);
+  --text-muted: rgba(14, 105, 115, 0.65);
+
+  --accent-primary: var(--color-yellow);
+  --accent-secondary: var(--color-ochre);
+  --accent-teal: var(--color-teal);
+
+  --border-soft: rgba(14, 105, 115, 0.15);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Force Light Mode */
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }

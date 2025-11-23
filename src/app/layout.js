@@ -1,8 +1,8 @@
 import "./globals.css";
-import Navbar from "@/components/Navbar";
+import Navbar from "../components/Navbar";
 
 export const metadata = {
-  title: "DABS",
+  title: "DABS Marketplace",
   description: "Empowering Artisan Women",
 };
 
@@ -10,7 +10,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="bg-[#FFF7EF]">
-        {/* GLOBAL NAVBAR (client component) */}
+        {/* GLOBAL NAVBAR */}
         <Navbar />
 
         {/* PAGE CONTENT */}
